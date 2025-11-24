@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.agentic.deployment.validation;
 
-import static org.junit.jupiter.api.Assertions.fail;
 
 import org.assertj.core.api.Assertions;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -9,8 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agentic.Agent;
-import dev.langchain4j.agentic.declarative.SequenceAgent;
-import dev.langchain4j.agentic.declarative.SubAgent;
+import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -28,20 +26,36 @@ public class InvalidOutputKeyWorkflowTest {
 
     @Test
     public void test() {
-        fail("should never be called");
+        StoryCreatorWorkflow storyCreatorWorkflow = AgenticServices
+                .sequenceBuilder(StoryCreatorWorkflow.class)
+                .subAgents(createCreativeWriteAgent(), createAudienceEditorAgent(), createStyleEditorAgent())
+                .outputKey("story-final")
+                .build();
+
+        storyCreatorWorkflow.write("topic", "style", "audience");
     }
 
-    public interface StoryCreator {
+    public CreativeWriterWorkflow createCreativeWriteAgent() {
+        return AgenticServices.agentBuilder(CreativeWriterWorkflow.class).outputKey("story-initial").build();
+    }
 
-        @SequenceAgent(outputKey = "story-final", subAgents = {
-                @SubAgent(type = CreativeWriter.class, outputKey = "story-initial"),
-                @SubAgent(type = AudienceEditor.class, outputKey = "story-edited"),
-                @SubAgent(type = StyleEditor.class, outputKey = "story-final")
-        })
+    public AudienceEditorWorkflow createAudienceEditorAgent() {
+        return AgenticServices.agentBuilder(AudienceEditorWorkflow.class).outputKey("story-edited").build();
+    }
+
+    public StyleEditorWorkflow createStyleEditorAgent() {
+        return AgenticServices.agentBuilder(StyleEditorWorkflow.class).outputKey("story-final").build();
+    }
+
+
+    public interface StoryCreatorWorkflow {
+
+        @Agent
         String write(@V("topic") String topic, @V("style") String style, @V("audience") String audience);
+
     }
 
-    public interface CreativeWriter {
+    public interface CreativeWriterWorkflow {
 
         @UserMessage("""
                 You are a creative writer.
@@ -53,7 +67,7 @@ public class InvalidOutputKeyWorkflowTest {
         String generateStory(@V("topic") String topic);
     }
 
-    public interface AudienceEditor {
+    public interface AudienceEditorWorkflow {
 
         @UserMessage("""
                 You are a professional editor.
@@ -65,7 +79,7 @@ public class InvalidOutputKeyWorkflowTest {
         String editStory(@V("story") String story, @V("audience") String audience);
     }
 
-    public interface StyleEditor {
+    public interface StyleEditorWorkflow {
 
         @UserMessage("""
                 You are a professional editor.

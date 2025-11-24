@@ -39,6 +39,7 @@ public class InvalidOutputKeyTest {
                 @SubAgent(type = StyleEditor.class, outputKey = "story-final")
         })
         String write(@V("topic") String topic, @V("style") String style, @V("audience") String audience);
+
     }
 
     public interface CreativeWriter {

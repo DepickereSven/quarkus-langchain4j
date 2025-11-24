@@ -16,7 +16,7 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class InvalidOutputKeyTest {
+public class InvalidOutputKeyWorkflowTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
